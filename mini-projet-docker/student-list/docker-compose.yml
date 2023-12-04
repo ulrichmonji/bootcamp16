@@ -1,0 +1,61 @@
+version: '3.1'
+
+services:
+
+  ihm-studentlist:
+    depends_on: 
+      - studentlist
+    image: php:apache
+    container_name: ihm-studentlist
+    restart: always
+    ports:
+      - 6400:80
+    environment:
+      USERNAME: toto
+      PASSWORD: python
+    volumes:
+      - ./website:/var/www/html
+    networks:
+      - studentlist-network      
+
+  studentlist:
+    image: bootcamp16-studentlist
+    container_name: studentlist
+    restart: always
+    volumes:
+      - ./simple_api/student_age.json:/data/student_age.json
+    networks:
+      - studentlist-network
+
+  registry:
+    image: registry:2
+    container_name: registry
+    restart: always
+    networks:
+      - studentlist-network
+    ports:
+      - 3000:5000
+
+  registry-ui:
+    image: joxit/docker-registry-ui
+    restart: always
+    ports:
+      - 80:80
+    environment:
+      - SINGLE_REGISTRY=true
+      - REGISTRY_TITLE=Bootcamp16 Registry UI
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+      - NGINX_PROXY_PASS_URL=http://registry:5000
+      - SHOW_CATALOG_NB_TAGS=true
+      - CATALOG_MIN_BRANCHES=1
+      - CATALOG_MAX_BRANCHES=1
+      - TAGLIST_PAGE_SIZE=100
+      - REGISTRY_SECURED=false
+      - CATALOG_ELEMENTS_LIMIT=10
+    container_name: registry-ui
+    networks:
+      - studentlist-network    
+
+networks:
+  studentlist-network:
